@@ -1,15 +1,20 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from skcriteria.agg._agg_base import RankResult
 import json
 
 # Models
 from models.municipio_stack import MunicipioStack
 from models.municipio import Municipio
 
+# TOPSIS
+from topsis import Topsis
+
 
 class MainApplication:
-    def __init__(self, municipio_stack: MunicipioStack) -> None:
+    def __init__(self, municipio_stack: MunicipioStack, topsis: Topsis) -> None:
         self.municipio_stack: MunicipioStack = municipio_stack
+        self.topsis: Topsis = topsis
         self.root: tk.Tk = tk.Tk()
         self.root.title('Análisis de Municipios en México')
         self.__create_tabs__()
@@ -92,8 +97,10 @@ class MainApplication:
         tab_control.pack(expand=1, fill="both")
 
     def __init_view__(self) -> None:
+        rank: RankResult = self.topsis.rank()
+        ttk.Label(self.view_municipios, text=f"{rank.e_}").grid(row=0, column=0, sticky="w")
         # Code for creating table
-        for row, municipio in enumerate(self.municipio_stack.municipios):
+        for row, municipio in enumerate(self.municipio_stack.municipios, 1):
             # We have always 5 columns
             for column in range(5):
                 entry: ttk.Entry = ttk.Entry(self.view_municipios, width=20, font=('Arial', 16, 'bold'))
@@ -106,6 +113,8 @@ if __name__ == "__main__":
     # Use 'with' to make sure file is closed after read
     with open(filename + '.json') as my_file:
         # Load 'municipio' stack to memory from 'json' file
-        municipio_stack: MunicipioStack = MunicipioStack(json.load(my_file)[filename])
+        json_data = json.load(my_file)[filename]
+        municipio_stack: MunicipioStack = MunicipioStack(json_data)
+        topsis: Topsis = Topsis(municipio_stack)
 
-    MainApplication(municipio_stack)
+    MainApplication(municipio_stack, topsis)
