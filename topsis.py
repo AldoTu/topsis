@@ -1,8 +1,4 @@
-from skcriteria.agg import similarity  # here lives TOPSIS
-from skcriteria.agg._agg_base import RankResult
-from skcriteria.pipeline import mkpipe  # this function is for create pipelines
-from skcriteria.preprocessing import invert_objectives, scalers
-from skcriteria import mkdm
+import pandas as pd
 
 # Models
 from models.municipio_stack import MunicipioStack
@@ -10,39 +6,68 @@ from models.municipio_stack import MunicipioStack
 
 class Topsis:
 
-    def __init__(self, municipio_stack: MunicipioStack) -> None:
-        self.municipio_stack = municipio_stack
-        self.__create_matrix__()
-        self.objectives: list = [max, max, min, min]
-        self.weights: list = [0.5, 0.05, 0.45, 0.45]
-        self.__create_alternatives__()
+    def __init__(self, data: dict) -> None:
+        self.df = pd.DataFrame.from_dict(data)
+        print(self.df.head())
+        self.weights: list = [0.21, 0.22, 0.18, 0.05, 0.04, 0.21, 0.01, 0.06, 0.02]
+        self.__normalize__()
+        self.p_sln, self.n_sln = self.__calculate_ideals__()
         self.criteria: list = ["Transporte público eficiente y ecológico", "Red de ciclovías y peatonales",
                                "Accesibilidad y movilidad inclusiva", "Minimización del tráfico"]
-        self.__create_decision_matrix__()
-        self.pipe: mkpipe = mkpipe(
-            invert_objectives.NegateMinimize(),
-            scalers.VectorScaler(target="matrix"),  # this scaler transform the matrix
-            scalers.SumScaler(target="weights"),  # and this transform the weights
-            similarity.TOPSIS(),
-        )
+        # self.pipe: mkpipe = mkpipe(
+        #     invert_objectives.NegateMinimize(),
+        #     scalers.VectorScaler(target="matrix"),  # this scaler transform the matrix
+        #     scalers.SumScaler(target="weights"),  # and this transform the weights
+        #     similarity.TOPSIS(),
+        # )
 
-    def __create_matrix__(self) -> None:
-        self.matrix: list = [[municipio.transportation, municipio.pedestrian_networks, municipio.accessibility,
-                              municipio.traffic] for municipio in self.municipio_stack.municipios]
+    def __get_number_of_columns__(self) -> int:
+        return len(self.df.columns)
 
-    def __create_alternatives__(self) -> None:
-        self.alternatives: list = [municipio.name for municipio in self.municipio_stack.municipios]
+    # Normalize dataset
+    def __normalize__(self) -> None:
+        for i in range(1, self.__get_number_of_columns__()):
+            rss = 0
+            df_len = len(self.df)
+            # Calculating Root of Sum of Squares for a particular column
+            for j in range(df_len):
+                rss += self.df.iloc[j, i] ** 2
+            rss = rss ** 0.5
+            # Weighted Normalizing a element
+            for j in range(df_len):
+                self.df.iat[j, i] = (self.df.iloc[j, i] / rss) * self.weights[i - 1]
+        print(self.df)
 
-    def __create_decision_matrix__(self) -> None:
-        self.dm = mkdm(
-            self.matrix,
-            self.objectives,
-            weights=self.weights,
-            alternatives=self.alternatives,
-            criteria=self.criteria,
-        )
+    # Calculate ideal best and ideal worst
+    def __calculate_ideals__(self) -> tuple:
+        p_sln = self.df.max().values[1:]
+        n_sln = self.df.min().values[1:]
+        return p_sln, n_sln
 
-    def rank(self) -> RankResult:
-        rank = self.pipe.evaluate(self.dm)
-        print(rank)
-        return rank
+    # Calculating Topsis score
+    def rank(self) -> pd.DataFrame:
+        score = []  # Topsis score
+        pp = []  # distance positive
+        nn = []  # distance negative
+
+        # Calculating distances and Topsis score for each row
+        for i in range(len(self.df)):
+            temp_p, temp_n = 0, 0
+            for j in range(1, self.__get_number_of_columns__()):
+                temp_p += (self.p_sln[j - 1] - self.df.iloc[i, j]) ** 2
+                temp_n += (self.n_sln[j - 1] - self.df.iloc[i, j]) ** 2
+            temp_p, temp_n = temp_p ** 0.5, temp_n ** 0.5
+            score.append(temp_n / (temp_p + temp_n))
+            nn.append(temp_n)
+            pp.append(temp_p)
+
+        # Appending new columns in dataset
+        self.df['distance positive'] = pp
+        self.df['distance negative'] = nn
+        self.df['Topsis Score'] = score
+
+        # Calculating the rank according to topsis score
+        self.df['Rank'] = (self.df['Topsis Score'].rank(method='max', ascending=False))
+        self.df = self.df.astype({"Rank": int})
+
+        return self.df

@@ -5,10 +5,15 @@ class MunicipioStack:
     def __init__(self, data: list[any]) -> None:
         self.municipios: list[Municipio] = [Municipio(
             item['name'],
-            item['transportation'],
-            item['pedestrian_networks'],
-            item['accessibility'],
-            item['traffic']
+            item['tech_infra'],
+            item['green_transportation'],
+            item['environment'],
+            item['public_services_quality'],
+            item['economy'],
+            item['citizen_participation'],
+            item['security'],
+            item['gen_characterization'],
+            item['socioeconomic']
         ) for item in data]
 
     # Function to append new 'municipio' to stack

@@ -1,6 +1,6 @@
 import tkinter as tk
+import pandas as pd
 from tkinter import ttk, messagebox
-from skcriteria.agg._agg_base import RankResult
 import json
 
 # Models
@@ -24,23 +24,32 @@ class MainApplication:
 
     def __save_data__(self) -> None:
         municipio_name: str = self.municipio_name_entry.get()
-        transportation: float = float(self.transportation_entry.get())
-        pedestrian_networks: float = float(self.pedestrian_networks_entry.get())
-        accessibility: float = float(self.accessibility_entry.get())
-        traffic: float = float(self.traffic_entry.get())
+        tech_infra: float = float(self.tech_infra_entry.get())
+        green_transportation: float = float(self.green_transportation_entry.get())
+        environment: float = float(self.environment_entry.get())
+        public_services_quality: float = float(self.public_services_quality_entry.get())
+        economy: float = float(self.economy_entry.get())
+        citizen_participation: float = float(self.citizen_participation_entry.get())
+        security: float = float(self.security_entry.get())
+        gen_characterization: float = float(self.gen_characterization_entry.get())
+        socioeconomic: float = float(self.socioeconomic_entry.get())
 
         # Create 'Municipio' object
         new_municipio: Municipio = Municipio(
             municipio_name,
-            transportation,
-            pedestrian_networks,
-            accessibility,
-            traffic
+            tech_infra,
+            green_transportation,
+            environment,
+            public_services_quality,
+            economy,
+            citizen_participation,
+            security,
+            gen_characterization,
+            socioeconomic
         )
 
         # Add new 'municipio' to MunicipioStack
         self.municipio_stack.append_municipio(new_municipio)
-        self.municipio_stack.print_municipios()
 
         # Refresh table view
         self.__init_view__()
@@ -48,7 +57,17 @@ class MainApplication:
         # Aquí puedes guardar los datos a un archivo, base de datos, o cualquier otro lugar
         # Por ahora, simplemente los mostraré en una ventana de mensaje (messagebox)
         messagebox.showinfo("¡Datos Guardados!",
-                            f"Nombre del Municipio: {municipio_name}\nTransporte público eficiente y ecológico: {transportation}\nRed de ciclovías y peatonales: {pedestrian_networks}\nAccesibilidad y movilidad inclusiva: {accessibility}\nMinimización del tráfico: {traffic}")
+                            f"Nombre del Municipio: {municipio_name}\n" +
+                            f"Infraestructura Tecnológica: {tech_infra}\n" +
+                            f"Movilidad Sostenible: {green_transportation}\n" +
+                            f"Sostenibilidad Ambiental: {environment}\n" +
+                            f"Calidad de Servicios Públicos: {public_services_quality}"
+                            f"Economía y Oportunidades de Mejora Económica en el Tiempo: {economy}\n" +
+                            f"Participación Ciudadana: {citizen_participation}\n" +
+                            f"Seguridad y Bienestar Social: {security}\n" +
+                            f"Caracterización Generacional: {gen_characterization}\n" +
+                            f"Variables socioeconómicas asociadas con el Modelo propuesto: {socioeconomic}\n"
+                            )
 
     def __init_inputs__(self) -> None:
         # Create the form elements
@@ -57,25 +76,52 @@ class MainApplication:
         self.municipio_name_entry: ttk.Entry = ttk.Entry(self.add_municipio)
         self.municipio_name_entry.grid(row=0, column=1, sticky="we")
 
-        # Transportation input
-        ttk.Label(self.add_municipio, text="Transporte público eficiente y ecológico:").grid(row=1, column=0, sticky="w")
-        self.transportation_entry: ttk.Entry = ttk.Entry(self.add_municipio)
-        self.transportation_entry.grid(row=1, column=1, sticky="we")
+        # Tech infra input
+        ttk.Label(self.add_municipio, text="Infraestructura Tecnológica:").grid(row=1, column=0, sticky="w")
+        self.tech_infra_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.tech_infra_entry.grid(row=1, column=1, sticky="we")
 
-        # Pedestrian networks input
-        ttk.Label(self.add_municipio, text="Red de ciclovías y peatonales:").grid(row=2, column=0, sticky="w")
-        self.pedestrian_networks_entry: ttk.Entry = ttk.Entry(self.add_municipio)
-        self.pedestrian_networks_entry.grid(row=2, column=1, sticky="we")
+        # Green transportation input
+        ttk.Label(self.add_municipio, text="Movilidad Sostenible:").grid(row=2, column=0, sticky="w")
+        self.green_transportation_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.green_transportation_entry.grid(row=2, column=1, sticky="we")
 
-        # Accessibility input
-        ttk.Label(self.add_municipio, text="Accesibilidad y movilidad inclusiva:").grid(row=3, column=0, sticky="w")
-        self.accessibility_entry: ttk.Entry = ttk.Entry(self.add_municipio)
-        self.accessibility_entry.grid(row=3, column=1, sticky="we")
+        # Environment input
+        ttk.Label(self.add_municipio, text="Sostenibilidad Ambiental:").grid(row=3, column=0, sticky="w")
+        self.environment_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.environment_entry.grid(row=3, column=1, sticky="we")
 
-        # Traffic input
-        ttk.Label(self.add_municipio, text="Minimización del tráfico:").grid(row=4, column=0, sticky="w")
-        self.traffic_entry: ttk.Entry = ttk.Entry(self.add_municipio)
-        self.traffic_entry.grid(row=4, column=1, sticky="we")
+        # Public services quality input
+        ttk.Label(self.add_municipio, text="Calidad de Servicios Públicos:").grid(row=4, column=0, sticky="w")
+        self.public_services_quality_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.public_services_quality_entry.grid(row=4, column=1, sticky="we")
+
+        # Economy input
+        ttk.Label(self.add_municipio, text="Economía y Oportunidades de Mejora Económica en el Tiempo:").grid(
+            row=4, column=0, sticky="w")
+        self.economy_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.economy_entry.grid(row=4, column=1, sticky="we")
+
+        # Citizen participation input
+        ttk.Label(self.add_municipio, text="Participación Ciudadana:").grid(row=4, column=0, sticky="w")
+        self.citizen_participation_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.citizen_participation_entry.grid(row=4, column=1, sticky="we")
+
+        # Security input
+        ttk.Label(self.add_municipio, text="Seguridad y Bienestar Social:").grid(row=4, column=0, sticky="w")
+        self.security_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.security_entry.grid(row=4, column=1, sticky="we")
+
+        # Generational characterization input
+        ttk.Label(self.add_municipio, text="Caracterización Generacional:").grid(row=4, column=0, sticky="w")
+        self.gen_characterization_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.gen_characterization_entry.grid(row=4, column=1, sticky="we")
+
+        # Socioeconomic input
+        ttk.Label(self.add_municipio, text="Variables socioeconómicas asociadas con el Modelo propuesto:").grid(
+            row=4, column=0, sticky="w")
+        self.socioeconomic_entry: ttk.Entry = ttk.Entry(self.add_municipio)
+        self.socioeconomic_entry.grid(row=4, column=1, sticky="we")
 
         # Save button
         save_button: ttk.Button = ttk.Button(self.add_municipio, text="Guardar Alternativa", command=self.__save_data__)
@@ -97,15 +143,24 @@ class MainApplication:
         tab_control.pack(expand=1, fill="both")
 
     def __init_view__(self) -> None:
-        rank: RankResult = self.topsis.rank()
-        ttk.Label(self.view_municipios, text=f"{rank.e_}").grid(row=0, column=0, sticky="w")
         # Code for creating table
-        for row, municipio in enumerate(self.municipio_stack.municipios, 1):
-            # We have always 5 columns
-            for column in range(5):
+        for row, municipio in enumerate(self.municipio_stack.municipios):
+            # We have always 10 columns
+            for column in range(10):
                 entry: ttk.Entry = ttk.Entry(self.view_municipios, width=20, font=('Arial', 16, 'bold'))
                 entry.grid(row=row, column=column)
                 entry.insert(tk.END, municipio.get_municipio_as_tuple()[column])
+
+        # Recalculate button
+        recalculate_button: ttk.Button = ttk.Button(self.view_municipios, text="Recalcular ranking", command=self.__init_view__)
+        recalculate_button.grid(row=10, column=0, sticky="e")
+
+        # Show table
+        rank: pd.DataFrame = self.topsis.rank()
+        ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=11, column=0,
+                                                                                              sticky="w")
+        ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=11, column=1,
+                                                                                              sticky="w")
 
 
 if __name__ == "__main__":
@@ -115,6 +170,6 @@ if __name__ == "__main__":
         # Load 'municipio' stack to memory from 'json' file
         json_data = json.load(my_file)[filename]
         municipio_stack: MunicipioStack = MunicipioStack(json_data)
-        topsis: Topsis = Topsis(municipio_stack)
+        topsis: Topsis = Topsis(json_data)
 
     MainApplication(municipio_stack, topsis)
