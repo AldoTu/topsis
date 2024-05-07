@@ -139,6 +139,10 @@ class MainApplication:
         tab_control.pack(expand=1, fill="both")
 
     def __init_view__(self) -> None:
+        # Reset frame
+        for widget in self.view_municipios.winfo_children():
+            widget.destroy()
+
         # Code for creating table
         for row, municipio in enumerate(self.municipio_stack.municipios):
             # We have always 10 columns
@@ -148,14 +152,16 @@ class MainApplication:
                 entry.insert(tk.END, municipio.get_municipio_as_tuple()[column])
 
         # Recalculate button
+        recalculate_button_row = len(self.municipio_stack.municipios)
         recalculate_button: ttk.Button = ttk.Button(self.view_municipios, text="Recalcular ranking", command=self.__init_view__)
-        recalculate_button.grid(row=10, column=0, sticky="e")
+        recalculate_button.grid(row=recalculate_button_row, column=0, sticky="e")
 
         # Show table
         rank: pd.DataFrame = self.municipio_stack.topsis.rank()
-        ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=11, column=0,
+        rank_row = recalculate_button_row + 1
+        ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=rank_row, column=0,
                                                                                               sticky="w")
-        ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=11, column=1,
+        ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=rank_row, column=1,
                                                                                               sticky="w")
 
 
