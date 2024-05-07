@@ -1,8 +1,5 @@
 import pandas as pd
 
-# Models
-from models.municipio_stack import MunicipioStack
-
 
 class Topsis:
 
@@ -12,17 +9,10 @@ class Topsis:
         self.weights: list = [0.21, 0.22, 0.18, 0.05, 0.04, 0.21, 0.01, 0.06, 0.02]
         self.__normalize__()
         self.p_sln, self.n_sln = self.__calculate_ideals__()
-        self.criteria: list = ["Transporte público eficiente y ecológico", "Red de ciclovías y peatonales",
-                               "Accesibilidad y movilidad inclusiva", "Minimización del tráfico"]
-        # self.pipe: mkpipe = mkpipe(
-        #     invert_objectives.NegateMinimize(),
-        #     scalers.VectorScaler(target="matrix"),  # this scaler transform the matrix
-        #     scalers.SumScaler(target="weights"),  # and this transform the weights
-        #     similarity.TOPSIS(),
-        # )
 
+    # Get number of columns (fixed to 10)
     def __get_number_of_columns__(self) -> int:
-        return len(self.df.columns)
+        return 10
 
     # Normalize dataset
     def __normalize__(self) -> None:
