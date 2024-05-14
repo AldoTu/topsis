@@ -5,7 +5,6 @@ import json
 
 # Models
 from models.municipio_stack import MunicipioStack
-from models.municipio import Municipio
 
 
 class MainApplication:
@@ -138,31 +137,60 @@ class MainApplication:
         # Packing notebook
         tab_control.pack(expand=1, fill="both")
 
+    # Method to update municipio_stack with user values
+    def __recalculate_ranking__(self) -> None:
+        # Get user entries
+        for row, municipio_row in enumerate(self.entries):
+            print(row)
+            values: list = [entry.get() for entry in municipio_row]
+            self.municipio_stack.update_municipio(row, values)
+
+        # Update ranking
+        self.__display_rank__()
+
+    # Function to calculate ranking and display it as a table
+    def __display_rank__(self) -> None:
+        # Show table
+        rank: pd.DataFrame = self.municipio_stack.topsis.rank()
+        rank_row = len(self.municipio_stack.municipios) + 1
+        ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=rank_row, column=0,
+                                                                                              sticky="w")
+        ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=rank_row, column=1,
+                                                                                              sticky="w")
+
     def __init_view__(self) -> None:
         # Reset frame
         for widget in self.view_municipios.winfo_children():
             widget.destroy()
 
+        # Matrix to store Entries widgets
+        self.entries = []
+
         # Code for creating table
-        for row, municipio in enumerate(self.municipio_stack.municipios):
+        for column, column_label in enumerate(self.municipio_stack.topsis.df.columns):
+            column_label = column_label.replace("_", " ").capitalize()
+            ttk.Label(self.view_municipios, text=column_label).grid(column=column, row=0, sticky="w")
+        for row, municipio in enumerate(self.municipio_stack.municipios, start=1):
+            entry_row = []
             # We have always 10 columns
             for column in range(10):
-                entry: ttk.Entry = ttk.Entry(self.view_municipios, width=20, font=('Arial', 16, 'bold'))
+                if row == 0:
+                    entry: ttk.Entry = ttk.Entry(self.view_municipios, width=15, font=('Arial', 16, 'bold'))
+                else:
+                    entry: ttk.Entry = ttk.Entry(self.view_municipios, width=10, font=('Arial', 16, 'bold'))
                 entry.grid(row=row, column=column)
                 entry.insert(tk.END, municipio.get_municipio_as_tuple()[column])
+                entry_row.append(entry)
+            self.entries.append(entry_row)
 
         # Recalculate button
         recalculate_button_row = len(self.municipio_stack.municipios)
-        recalculate_button: ttk.Button = ttk.Button(self.view_municipios, text="Recalcular ranking", command=self.__init_view__)
+        recalculate_button: ttk.Button = ttk.Button(self.view_municipios, text="Recalcular ranking",
+                                                    command=self.__recalculate_ranking__)
         recalculate_button.grid(row=recalculate_button_row, column=0, sticky="e")
 
         # Show table
-        rank: pd.DataFrame = self.municipio_stack.topsis.rank()
-        rank_row = recalculate_button_row + 1
-        ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=rank_row, column=0,
-                                                                                              sticky="w")
-        ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=rank_row, column=1,
-                                                                                              sticky="w")
+        self.__display_rank__()
 
 
 if __name__ == "__main__":

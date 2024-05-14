@@ -1,4 +1,4 @@
-import pandas as pd
+from utils.utils import normalize_array
 
 # Models
 from models.municipio import Municipio
@@ -45,3 +45,22 @@ class MunicipioStack:
     def print_municipios(self) -> None:
         for municipio in self.municipios:
             print(municipio)
+
+    # Update municipio in stack and in topsis df
+    def update_municipio(self, row: int, values: list) -> None:
+        # Normalize array values
+        values: list = normalize_array(values)
+        # Store updated municipio in same list space
+        self.municipios[row] = Municipio(
+            values[0],
+            values[1],
+            values[2],
+            values[3],
+            values[4],
+            values[5],
+            values[6],
+            values[7],
+            values[8],
+            values[9]
+        )
+        self.topsis.df.loc[row] = values + [None, None, None, None]

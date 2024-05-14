@@ -40,6 +40,9 @@ class Topsis:
         pp = []  # distance positive
         nn = []  # distance negative
 
+        # Recalculate ideals
+        self.__calculate_ideals__()
+
         # Calculating distances and Topsis score for each row
         for i in range(len(self.df)):
             temp_p, temp_n = 0, 0
