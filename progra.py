@@ -1,6 +1,5 @@
 import tkinter as tk
 import pandas as pd
-import matplotlib.pyplot as plt
 import json
 
 from tkinter import ttk, messagebox
@@ -21,6 +20,8 @@ class MainApplication:
         self.__init_view__()
         # Draw TIR graph
         self.__draw_figure__()
+        # Create narrative
+        self.__create_narrative__()
         self.root.mainloop()
 
     def __save_data__(self) -> None:
@@ -134,12 +135,19 @@ class MainApplication:
     def __create_tabs__(self) -> None:
         # Creating notebook
         tab_control: ttk.Notebook = ttk.Notebook(self.root)
+
         # Creating tabs
         self.add_municipio: ttk.Frame = ttk.Frame(tab_control)
         self.view_municipios: ttk.Frame = ttk.Frame(tab_control)
+        self.view_narration: ttk.Frame = ttk.Frame(tab_control)
+        self.view_carbon_footprint: ttk.Frame = ttk.Frame(tab_control)
+
         # Adding tabs to notebook
         tab_control.add(self.add_municipio, text='Agregar Municipio')
         tab_control.add(self.view_municipios, text='Visualizar Municipios')
+        tab_control.add(self.view_narration, text='Visualizar Narrativos')
+        tab_control.add(self.view_carbon_footprint, text='Visualizar Huella de Carbono')
+
         # Packing notebook
         tab_control.pack(expand=1, fill="both")
 
@@ -244,6 +252,17 @@ class MainApplication:
         self.view_municipios.grid_columnconfigure(3, weight=1)
         self.view_municipios.grid_columnconfigure(4, weight=1)
         self.view_municipios.grid_columnconfigure(5, weight=1)
+
+    def __create_narrative__(self) -> None:
+        # Reset frame
+        for widget in self.view_narration.winfo_children():
+            widget.destroy()
+
+        # Create text
+        text = "La alternativa 4 es mejor en: _________ % y esto se deriva en que los indicadores: __ , ___, ___ y ___ tienen mejor desempeño debido a que resuelven los requerimientos de la visualización y seguimiento del ganado caprino."
+
+        # Code for creating narration
+        ttk.Label(self.view_narration, text=text).grid(column=0, row=0, sticky="w")
 
 
 if __name__ == "__main__":
