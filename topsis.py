@@ -5,7 +5,6 @@ class Topsis:
 
     def __init__(self, data: dict) -> None:
         self.df = pd.DataFrame.from_dict(data)
-        print(self.df.head())
         self.weights: list = [0.21, 0.22, 0.18, 0.05, 0.04, 0.21, 0.01, 0.06, 0.02]
         self.__normalize__()
         self.p_sln, self.n_sln = self.__calculate_ideals__()
@@ -26,7 +25,6 @@ class Topsis:
             # Weighted Normalizing a element
             for j in range(df_len):
                 self.df.iat[j, i] = (self.df.iloc[j, i] / rss) * self.weights[i - 1]
-        print(self.df)
 
     # Calculate ideal best and ideal worst
     def __calculate_ideals__(self) -> tuple:

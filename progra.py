@@ -1,7 +1,11 @@
 import tkinter as tk
 import pandas as pd
-from tkinter import ttk, messagebox
+import matplotlib.pyplot as plt
 import json
+
+from tkinter import ttk, messagebox
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Models
 from models.municipio_stack import MunicipioStack
@@ -15,6 +19,8 @@ class MainApplication:
         self.__create_tabs__()
         self.__init_inputs__()
         self.__init_view__()
+        # Draw TIR graph
+        self.__draw_figure__()
         self.root.mainloop()
 
     def __save_data__(self) -> None:
@@ -49,8 +55,7 @@ class MainApplication:
         # Refresh table view
         self.__init_view__()
 
-        # Aquí puedes guardar los datos a un archivo, base de datos, o cualquier otro lugar
-        # Por ahora, simplemente los mostraré en una ventana de mensaje (messagebox)
+        # Display added municipio as a message box
         messagebox.showinfo("¡Datos Guardados!",
                             f"Nombre del Municipio: {municipio_name}\n" +
                             f"Infraestructura Tecnológica: {tech_infra}\n" +
@@ -125,6 +130,7 @@ class MainApplication:
         # Make the second column stretchable
         self.root.columnconfigure(1, weight=1)
 
+    # Method to create the tabs when the app boots
     def __create_tabs__(self) -> None:
         # Creating notebook
         tab_control: ttk.Notebook = ttk.Notebook(self.root)
@@ -148,11 +154,14 @@ class MainApplication:
         # Update ranking
         self.__display_rank__()
 
+        # Draw TIR graph
+        self.__draw_figure__()
+
     # Function to calculate ranking and display it as a table
     def __display_rank__(self) -> None:
         # Show table
         rank: pd.DataFrame = self.municipio_stack.topsis.rank()
-        rank_row = len(self.municipio_stack.municipios) + 1
+        rank_row = len(self.municipio_stack.municipios) + 2
         ttk.Label(self.view_municipios, text=f"{rank[['name']].to_string(index=False)}").grid(row=rank_row, column=0,
                                                                                               sticky="w")
         ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=rank_row, column=1,
@@ -184,13 +193,57 @@ class MainApplication:
             self.entries.append(entry_row)
 
         # Recalculate button
-        recalculate_button_row = len(self.municipio_stack.municipios)
+        recalculate_button_row = len(self.municipio_stack.municipios) + 1
         recalculate_button: ttk.Button = ttk.Button(self.view_municipios, text="Recalcular ranking",
                                                     command=self.__recalculate_ranking__)
         recalculate_button.grid(row=recalculate_button_row, column=0, sticky="e")
 
         # Show table
         self.__display_rank__()
+
+    # Method to implement matplotlib into tkinter
+    def __draw_figure__(self) -> None:
+        ###
+        # Crear un rango de fechas mensuales para 3 años
+        index = pd.date_range(start='2022-01-01', periods=36, freq='M')
+
+        # Definir los flujos de caja mensuales
+        cash_flows = [-100] + [20] * 5 + [-50] + [30] * 5 + [30] * 24  # Ajustar para 36 meses
+
+        # Convertir flujos mensuales a saldo acumulado
+        accumulated_cash_flows = []
+        accumulated_cash = 0
+        for flow in cash_flows:
+            accumulated_cash += flow
+            accumulated_cash_flows.append(accumulated_cash)
+
+        # Crear un DataFrame de pandas
+        df = pd.DataFrame(data={'Accumulated Cash Flow': accumulated_cash_flows}, index=index)
+
+        # Crear una figura de matplotlib
+        fig = Figure(figsize=(8, 3), dpi=100)
+        ax = fig.add_subplot(111)
+
+        # Graficar la serie temporal del saldo acumulado de flujos de caja
+        ax.plot(df.index, df['Accumulated Cash Flow'], marker='o', linestyle='-', color='b')
+        ax.set_title('Saldo Acumulado de Flujo de Caja Proyectado para 3 Años')
+        ax.set_xlabel('Fecha')
+        ax.set_ylabel('Saldo de Flujo de Caja (millones de $)')
+        ax.axhline(0, color='red', linewidth=0.8)  # Añadir una línea en y=0 para claridad
+        ax.grid(True)
+        ax.tick_params(axis='x', rotation=45)
+        fig.tight_layout()  # Ajustar automáticamente los parámetros de la subtrama
+        ###
+
+        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(fig, self.view_municipios)
+        figure_canvas_agg.draw()
+        figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=5, sticky=tk.NSEW)
+
+        # Asegurarse de que el frame se expanda
+        self.view_municipios.grid_rowconfigure(len(self.municipio_stack.municipios) + 2, weight=1)
+        self.view_municipios.grid_columnconfigure(3, weight=1)
+        self.view_municipios.grid_columnconfigure(4, weight=1)
+        self.view_municipios.grid_columnconfigure(5, weight=1)
 
 
 if __name__ == "__main__":
