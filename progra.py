@@ -3,16 +3,19 @@ import pandas as pd
 import json
 
 from tkinter import ttk, messagebox
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Models
 from models.municipio_stack import MunicipioStack
+from models.irr import Irr
 
 
 class MainApplication:
     def __init__(self, municipio_stack: MunicipioStack) -> None:
+
+        # Define internal models
         self.municipio_stack: MunicipioStack = municipio_stack
+        self.irr: Irr = Irr()
         self.root: tk.Tk = tk.Tk()
         self.root.title('Análisis de Municipios en México')
         self.__create_tabs__()
@@ -22,6 +25,7 @@ class MainApplication:
         self.__draw_figure__()
         # Create narrative
         self.__create_narrative__()
+        self.__init_carbon_inputs__()
         self.root.mainloop()
 
     def __save_data__(self) -> None:
@@ -70,6 +74,7 @@ class MainApplication:
                             f"Variables socioeconómicas asociadas con el Modelo propuesto: {socioeconomic}\n"
                             )
 
+    # Method to initialize inputs for the "add_municipio" view
     def __init_inputs__(self) -> None:
         # Create the form elements
         # Name input
@@ -151,6 +156,35 @@ class MainApplication:
         # Packing notebook
         tab_control.pack(expand=1, fill="both")
 
+    # Method to calculate carbon footprint base on input values from the user
+    def __calculate_carbon_footprint__(self):
+        co2_created: float = float(self.co2_created_entry.get())
+        no_manufactured_cars: int = int(self.no_manufactured_cars_entry.get())
+        print(co2_created*no_manufactured_cars)
+        return co2_created * no_manufactured_cars
+
+    # Method to initialize inputs for the "view_carbon_footprint" view
+    def __init_carbon_inputs__(self) -> None:
+        # Create the form elements
+        # CO2 created per car
+        ttk.Label(self.view_carbon_footprint, text="Emisión de CO2 por coche fabricado:").grid(row=0, column=0,
+                                                                                               sticky="w")
+        self.co2_created_entry: ttk.Entry = ttk.Entry(self.view_carbon_footprint)
+        self.co2_created_entry.grid(row=0, column=1, sticky="we")
+
+        # No. of manufactured cars input
+        ttk.Label(self.view_carbon_footprint, text="Coches fabricados al año:").grid(row=1, column=0, sticky="w")
+        self.no_manufactured_cars_entry: ttk.Entry = ttk.Entry(self.view_carbon_footprint)
+        self.no_manufactured_cars_entry.grid(row=1, column=1, sticky="we")
+
+        # Save button
+        save_button: ttk.Button = ttk.Button(self.view_carbon_footprint, text="Calcular huella de carbono",
+                                             command=self.__calculate_carbon_footprint__)
+        save_button.grid(row=2, column=0, sticky="e")
+
+        # Make the second column stretchable
+        self.root.columnconfigure(1, weight=1)
+
     # Method to update municipio_stack with user values
     def __recalculate_ranking__(self) -> None:
         # Get user entries
@@ -209,45 +243,14 @@ class MainApplication:
         # Show table
         self.__display_rank__()
 
-    # Method to implement matplotlib into tkinter
+    # Method to implement TIR matplotlib graph into tkinter
     def __draw_figure__(self) -> None:
-        ###
-        # Crear un rango de fechas mensuales para 3 años
-        index = pd.date_range(start='2022-01-01', periods=36, freq='M')
-
-        # Definir los flujos de caja mensuales
-        cash_flows = [-100] + [20] * 5 + [-50] + [30] * 5 + [30] * 24  # Ajustar para 36 meses
-
-        # Convertir flujos mensuales a saldo acumulado
-        accumulated_cash_flows = []
-        accumulated_cash = 0
-        for flow in cash_flows:
-            accumulated_cash += flow
-            accumulated_cash_flows.append(accumulated_cash)
-
-        # Crear un DataFrame de pandas
-        df = pd.DataFrame(data={'Accumulated Cash Flow': accumulated_cash_flows}, index=index)
-
-        # Crear una figura de matplotlib
-        fig = Figure(figsize=(8, 3), dpi=100)
-        ax = fig.add_subplot(111)
-
-        # Graficar la serie temporal del saldo acumulado de flujos de caja
-        ax.plot(df.index, df['Accumulated Cash Flow'], marker='o', linestyle='-', color='b')
-        ax.set_title('Saldo Acumulado de Flujo de Caja Proyectado para 3 Años')
-        ax.set_xlabel('Fecha')
-        ax.set_ylabel('Saldo de Flujo de Caja (millones de $)')
-        ax.axhline(0, color='red', linewidth=0.8)  # Añadir una línea en y=0 para claridad
-        ax.grid(True)
-        ax.tick_params(axis='x', rotation=45)
-        fig.tight_layout()  # Ajustar automáticamente los parámetros de la subtrama
-        ###
-
-        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(fig, self.view_municipios)
+        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.irr.create_graph_fig(), self.view_municipios)
         figure_canvas_agg.draw()
-        figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=5, sticky=tk.NSEW)
+        figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=5,
+                                               sticky=tk.NSEW)
 
-        # Asegurarse de que el frame se expanda
+        # Make sure frame can be expanded
         self.view_municipios.grid_rowconfigure(len(self.municipio_stack.municipios) + 2, weight=1)
         self.view_municipios.grid_columnconfigure(3, weight=1)
         self.view_municipios.grid_columnconfigure(4, weight=1)
