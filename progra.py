@@ -19,8 +19,6 @@ class MainApplication:
         self.__create_tabs__()
         self.__init_inputs__()
         self.__init_view__()
-        # Draw TIR graph
-        self.__draw_figure__()
         # Create narrative
         self.__create_narrative__()
         self.__init_carbon_inputs__()
@@ -195,9 +193,6 @@ class MainApplication:
         # Update ranking
         self.__display_rank__()
 
-        # Draw TIR graph
-        self.__draw_figure__()
-
     # Function to calculate ranking and display it as a table
     def __display_rank__(self) -> None:
         # Show table
@@ -207,6 +202,9 @@ class MainApplication:
                                                                                               sticky="w")
         ttk.Label(self.view_municipios, text=f"{rank[['Rank']].to_string(index=False)}").grid(row=rank_row, column=1,
                                                                                               sticky="w")
+
+        # Draw IRR graph
+        self.__draw_figure__()
 
     def __init_view__(self) -> None:
         # Reset frame
