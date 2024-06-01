@@ -1,9 +1,15 @@
-from matplotlib.figure import Figure
+from matplotlib.figure import Figure, FigureBase
+
+# Models
+from topsis import Topsis
 
 
 class Irr:
 
-    def __init__(self) -> None:
+    def __init__(self, topsis: Topsis) -> None:
+        # Receive topsis rankings
+        self.topsis = topsis
+
         # Yearly income data
         self.years: list = [2025, 2026, 2027, 2028, 2029]
         self.volkswagen_revenue = [282.3, 264.0, 287.2, 309.8, 318.3]
@@ -25,15 +31,19 @@ class Irr:
         self.average_adjusted: list = [value - self.average_revenue[0] for value in self.average_revenue]
 
     def create_graph_fig(self) -> Figure:
+        # Get no. 1 ranked municipio
+        no_1_topsis_score: float = self.topsis.df[self.topsis.df['Rank'] == 1]['Topsis Score']
         # Create a matplotlib fig
-        fig = Figure(figsize=(8, 3), dpi=100)
-        ax = fig.add_subplot(111)
+        fig: Figure = Figure(figsize=(8, 3), dpi=100)
+        ax: FigureBase = fig.add_subplot(111)
 
-        ax.plot(self.years, self.average_adjusted, marker='o', label='Average Adjusted Revenue')
+        # Plot data
+        ax.plot(self.years, [period * no_1_topsis_score for period in self.average_adjusted], marker='o')
 
+        # Set graph params
         ax.set_xlabel('Years')
-        ax.set_ylabel('Adjusted Revenue (Deviation from Initial Year, in billion USD)')
-        ax.set_title('Adjusted Average Annual Revenue of Car Manufacturing Companies (2019-2023)')
+        ax.set_ylabel('Average Revenue (in billion USD)')
+        ax.set_title('Average Annual Revenue of Car Manufacturing Factory (2019-2023)')
         ax.legend()
         ax.grid(True)
         ax.tick_params(axis='x', rotation=45)

@@ -7,7 +7,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Models
 from models.municipio_stack import MunicipioStack
-from models.irr import Irr
 
 
 class MainApplication:
@@ -15,7 +14,6 @@ class MainApplication:
 
         # Define internal models
         self.municipio_stack: MunicipioStack = municipio_stack
-        self.irr: Irr = Irr()
         self.root: tk.Tk = tk.Tk()
         self.root.title('Análisis de Municipios en México')
         self.__create_tabs__()
@@ -157,10 +155,11 @@ class MainApplication:
         tab_control.pack(expand=1, fill="both")
 
     # Method to calculate carbon footprint base on input values from the user
+    # TODO: Move method to carbon_footprint class
     def __calculate_carbon_footprint__(self):
         co2_created: float = float(self.co2_created_entry.get())
         no_manufactured_cars: int = int(self.no_manufactured_cars_entry.get())
-        print(co2_created*no_manufactured_cars)
+
         return co2_created * no_manufactured_cars
 
     # Method to initialize inputs for the "view_carbon_footprint" view
@@ -245,7 +244,8 @@ class MainApplication:
 
     # Method to implement TIR matplotlib graph into tkinter
     def __draw_figure__(self) -> None:
-        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.irr.create_graph_fig(), self.view_municipios)
+        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.municipio_stack.irr.create_graph_fig(),
+                                                                 self.view_municipios)
         figure_canvas_agg.draw()
         figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=5,
                                                sticky=tk.NSEW)

@@ -2,6 +2,7 @@ from utils.utils import normalize_array
 
 # Models
 from models.municipio import Municipio
+from models.irr import Irr
 
 # TOPSIS
 from topsis import Topsis
@@ -22,6 +23,7 @@ class MunicipioStack:
             item['socioeconomic']
         ) for item in data]
         self.topsis: Topsis = Topsis(data)
+        self.irr: Irr = Irr(self.topsis)
 
     # Function to append new 'municipio' to stack
     def append_municipio(self, municipio: dict) -> None:
@@ -37,14 +39,8 @@ class MunicipioStack:
             municipio['gen_characterization'],
             municipio['socioeconomic']
         ))
-        #self.topsis.df = self.topsis.df.join(pd.DataFrame(municipio.values(), columns=self.topsis.df.columns))
-        self.topsis.df.loc[len(self.topsis.df)] = [v for k, v in municipio.items()] + [None, None, None, None]
-        print(self.topsis.df)
 
-    # Read 'municipio' stack
-    def print_municipios(self) -> None:
-        for municipio in self.municipios:
-            print(municipio)
+        self.topsis.df.loc[len(self.topsis.df)] = [v for k, v in municipio.items()] + [None, None, None, None]
 
     # Update municipio in stack and in topsis df
     def update_municipio(self, row: int, values: list) -> None:

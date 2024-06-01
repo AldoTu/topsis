@@ -39,7 +39,7 @@ class Topsis:
         nn = []  # distance negative
 
         # Recalculate ideals
-        self.__calculate_ideals__()
+        self.p_sln, self.n_sln = self.__calculate_ideals__()
 
         # Calculating distances and Topsis score for each row
         for i in range(len(self.df)):
