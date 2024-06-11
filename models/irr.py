@@ -1,4 +1,8 @@
 from matplotlib.figure import Figure, FigureBase
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+import pandas as pd
 
 # Models
 from topsis import Topsis
@@ -11,7 +15,8 @@ class Irr:
         self.topsis = topsis
 
         # Yearly income data
-        self.years: list = [2025, 2026, 2027, 2028, 2029]
+        self.initial_years: list = [2019, 2020, 2021, 2022, 2023]
+        self.years: list = [2024, 2025]
         self.volkswagen_revenue = [282.3, 264.0, 287.2, 309.8, 318.3]
         self.toyota_revenue: list = [275.4, 256.5, 279.3, 278.7, 286.2]
         self.stellantis_revenue: list = [197.8, 180.4, 182.4, 195.6, 200.9]
@@ -30,20 +35,47 @@ class Irr:
         # Adjust data to start at 0 on Y axis
         self.average_adjusted: list = [value - self.average_revenue[0] for value in self.average_revenue]
 
+    def __train_irr_regression_model__(self, no_1_topsis_score: float) -> list:
+        # Create dummy df to train model
+        df_irr: pd.DataFrame = pd.DataFrame({
+            'average_adjusted': [period * no_1_topsis_score for period in self.average_adjusted.copy()],
+            'years': self.initial_years.copy()
+        })
+
+        X: pd.DataFrame = df_irr[['years']]
+        y: pd.Series = df_irr['average_adjusted']
+
+        # Create polynomial characteristics of 3 degree
+        poly: PolynomialFeatures = PolynomialFeatures(degree=3)
+        X_poly: pd.Series = poly.fit_transform(X)
+
+        # Create the linear regression model
+        model: LinearRegression = LinearRegression()
+
+        # Train the model with the polynomial characteristics
+        model.fit(X_poly, y)
+
+        # Create new predictions
+        y_predict: list = [[float(model.predict(poly.transform([[year]]))[0]) for year in self.years]][0]
+
+        return y_predict
+
     def create_graph_fig(self) -> Figure:
         # Get no. 1 ranked municipio
-        no_1_topsis_score: float = self.topsis.df[self.topsis.df['Rank'] == 1]['Topsis Score']
+        no_1_topsis_score: float = float(self.topsis.df[self.topsis.df['Rank'] == 1]['Topsis Score'])
+        y_predict: list = self.__train_irr_regression_model__(no_1_topsis_score)
         # Create a matplotlib fig
         fig: Figure = Figure(figsize=(8, 3), dpi=100)
         ax: FigureBase = fig.add_subplot(111)
 
         # Plot data
-        ax.plot(self.years, [period * no_1_topsis_score for period in self.average_adjusted], marker='o')
+        ax.plot(self.initial_years, self.average_adjusted, marker='o')
+        ax.plot(self.initial_years[-1:] + self.years, self.average_adjusted[-1:] + y_predict, marker='o')
 
         # Set graph params
         ax.set_xlabel('Years')
         ax.set_ylabel('Average Revenue (in billion USD)')
-        ax.set_title('Average Annual Revenue of Car Manufacturing Factory (2019-2023)')
+        ax.set_title('Estimated Average Annual Revenue of Car Manufacturing Factory')
         ax.legend()
         ax.grid(True)
         ax.tick_params(axis='x', rotation=45)

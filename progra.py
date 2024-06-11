@@ -20,8 +20,7 @@ class MainApplication:
         self.__init_inputs__()
         self.__init_view__()
         # Create narrative
-        self.__create_narrative__()
-        self.__init_carbon_inputs__()
+        self.__init_narrative__()
         self.root.mainloop()
 
     def __save_data__(self) -> None:
@@ -141,46 +140,14 @@ class MainApplication:
         self.add_municipio: ttk.Frame = ttk.Frame(tab_control)
         self.view_municipios: ttk.Frame = ttk.Frame(tab_control)
         self.view_narration: ttk.Frame = ttk.Frame(tab_control)
-        self.view_carbon_footprint: ttk.Frame = ttk.Frame(tab_control)
 
         # Adding tabs to notebook
         tab_control.add(self.add_municipio, text='Agregar Municipio')
         tab_control.add(self.view_municipios, text='Visualizar Municipios')
         tab_control.add(self.view_narration, text='Visualizar Narrativos')
-        tab_control.add(self.view_carbon_footprint, text='Visualizar Huella de Carbono')
 
         # Packing notebook
         tab_control.pack(expand=1, fill="both")
-
-    # Method to calculate carbon footprint base on input values from the user
-    # TODO: Move method to carbon_footprint class
-    def __calculate_carbon_footprint__(self):
-        co2_created: float = float(self.co2_created_entry.get())
-        no_manufactured_cars: int = int(self.no_manufactured_cars_entry.get())
-
-        return co2_created * no_manufactured_cars
-
-    # Method to initialize inputs for the "view_carbon_footprint" view
-    def __init_carbon_inputs__(self) -> None:
-        # Create the form elements
-        # CO2 created per car
-        ttk.Label(self.view_carbon_footprint, text="Emisión de CO2 por coche fabricado:").grid(row=0, column=0,
-                                                                                               sticky="w")
-        self.co2_created_entry: ttk.Entry = ttk.Entry(self.view_carbon_footprint)
-        self.co2_created_entry.grid(row=0, column=1, sticky="we")
-
-        # No. of manufactured cars input
-        ttk.Label(self.view_carbon_footprint, text="Coches fabricados al año:").grid(row=1, column=0, sticky="w")
-        self.no_manufactured_cars_entry: ttk.Entry = ttk.Entry(self.view_carbon_footprint)
-        self.no_manufactured_cars_entry.grid(row=1, column=1, sticky="we")
-
-        # Save button
-        save_button: ttk.Button = ttk.Button(self.view_carbon_footprint, text="Calcular huella de carbono",
-                                             command=self.__calculate_carbon_footprint__)
-        save_button.grid(row=2, column=0, sticky="e")
-
-        # Make the second column stretchable
-        self.root.columnconfigure(1, weight=1)
 
     # Method to update municipio_stack with user values
     def __recalculate_ranking__(self) -> None:
@@ -245,7 +212,7 @@ class MainApplication:
         figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.municipio_stack.irr.create_graph_fig(),
                                                                  self.view_municipios)
         figure_canvas_agg.draw()
-        figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=5,
+        figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=6,
                                                sticky=tk.NSEW)
 
         # Make sure frame can be expanded
@@ -253,8 +220,9 @@ class MainApplication:
         self.view_municipios.grid_columnconfigure(3, weight=1)
         self.view_municipios.grid_columnconfigure(4, weight=1)
         self.view_municipios.grid_columnconfigure(5, weight=1)
+        self.view_municipios.grid_columnconfigure(6, weight=1)
 
-    def __create_narrative__(self) -> None:
+    def __init_narrative__(self) -> None:
         # Reset frame
         for widget in self.view_narration.winfo_children():
             widget.destroy()
@@ -264,6 +232,9 @@ class MainApplication:
 
         # Code for creating narration
         ttk.Label(self.view_narration, text=text).grid(column=0, row=0, sticky="w")
+
+        # Make the second column stretchable
+        self.root.columnconfigure(1, weight=1)
 
 
 if __name__ == "__main__":
