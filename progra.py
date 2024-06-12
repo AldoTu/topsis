@@ -209,7 +209,7 @@ class MainApplication:
 
     # Method to implement TIR matplotlib graph into tkinter
     def __draw_figure__(self) -> None:
-        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.municipio_stack.irr.create_graph_fig(),
+        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.municipio_stack.irr.create_graph_fig(1),
                                                                  self.view_municipios)
         figure_canvas_agg.draw()
         figure_canvas_agg.get_tk_widget().grid(row=len(self.municipio_stack.municipios) + 2, column=3, columnspan=6,
@@ -222,16 +222,50 @@ class MainApplication:
         self.view_municipios.grid_columnconfigure(5, weight=1)
         self.view_municipios.grid_columnconfigure(6, weight=1)
 
+    # Create explanation of smart city
+    def __explain_data__(self):
+        # Get selected city
+        selected_city: str = self.narrative_combobox.get()
+
+        # Get city data from dataframe
+        selected_city_value: pd.DataFrame = self.municipio_stack.topsis.df[self.municipio_stack.topsis.df['name']
+                                                                           == selected_city]
+
+        # Create text
+        narrative_text: str = f"La ciudad '{list(selected_city_value['name'])[0]}' tiene un ranking {list(
+            selected_city_value['Rank'])[0]} con una calificación TOPSIS de {round(float(list(
+            selected_city_value['Topsis Score'])[0]), 6)} calculado con la solución ideal negativa."
+
+        # Attach text to narration
+        ttk.Label(self.view_narration, text=narrative_text).grid(row=2, column=0, sticky="w")
+
+        # Show graph for specific city
+        figure_canvas_agg: FigureCanvasTkAgg = FigureCanvasTkAgg(self.municipio_stack.irr.create_graph_fig(int(
+            selected_city_value['Rank'])), self.view_narration)
+        figure_canvas_agg.draw()
+        figure_canvas_agg.get_tk_widget().grid(row=3, column=0, columnspan=2, sticky=tk.NSEW)
+
+        # Make sure frame can be expanded
+        self.view_narration.grid_rowconfigure(3, weight=1)
+        self.view_narration.grid_columnconfigure(2, weight=1)
+
+    # Function to initialize narrative tab
     def __init_narrative__(self) -> None:
         # Reset frame
         for widget in self.view_narration.winfo_children():
             widget.destroy()
 
-        # Create text
-        text = "La alternativa 4 es mejor en: _________ % y esto se deriva en que los indicadores: __ , ___, ___ y ___ tienen mejor desempeño debido a que resuelven los requerimientos de la visualización y seguimiento del ganado caprino."
+        # Smart cities' names
+        options: list = list(self.municipio_stack.topsis.df['name'])
 
-        # Code for creating narration
-        ttk.Label(self.view_narration, text=text).grid(column=0, row=0, sticky="w")
+        # Name dropdown
+        ttk.Label(self.view_narration, text="Ciudad a describir: ").grid(row=0, column=0, sticky="w")
+        self.narrative_combobox: ttk.Combobox = ttk.Combobox(self.view_narration, values=options, state="readonly")
+        self.narrative_combobox.grid(row=0, column=1, padx=5, pady=5)
+
+        # Describe narrative button
+        describe_button: ttk.Button = ttk.Button(self.view_narration, text="Explicar narrativa", command=self.__explain_data__)
+        describe_button.grid(row=1, column=0, sticky="e")
 
         # Make the second column stretchable
         self.root.columnconfigure(1, weight=1)

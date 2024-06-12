@@ -35,11 +35,11 @@ class Irr:
         # Adjust data to start at 0 on Y axis
         self.average_adjusted: list = [value - self.average_revenue[0] for value in self.average_revenue]
 
-    def __train_irr_regression_model__(self, no_1_topsis_score: float) -> list:
+    def __train_irr_regression_model__(self, no_topsis_score: float) -> tuple:
         # Create dummy df to train model
         df_irr: pd.DataFrame = pd.DataFrame({
-            'average_adjusted': [period * no_1_topsis_score for period in self.average_adjusted.copy()],
-            'years': self.initial_years.copy()
+            'average_adjusted': [period * no_topsis_score for period in self.average_adjusted],
+            'years': self.initial_years
         })
 
         X: pd.DataFrame = df_irr[['years']]
@@ -58,19 +58,19 @@ class Irr:
         # Create new predictions
         y_predict: list = [[float(model.predict(poly.transform([[year]]))[0]) for year in self.years]][0]
 
-        return y_predict
+        return list(df_irr['average_adjusted']), y_predict
 
-    def create_graph_fig(self) -> Figure:
-        # Get no. 1 ranked municipio
-        no_1_topsis_score: float = float(self.topsis.df[self.topsis.df['Rank'] == 1]['Topsis Score'])
-        y_predict: list = self.__train_irr_regression_model__(no_1_topsis_score)
+    def create_graph_fig(self, topsis_rank: int) -> Figure:
+        # Get ranked municipio
+        no_topsis_score: float = float(self.topsis.df[self.topsis.df['Rank'] == topsis_rank]['Topsis Score'])
+        new_average_adjusted, y_predict = self.__train_irr_regression_model__(no_topsis_score)
         # Create a matplotlib fig
         fig: Figure = Figure(figsize=(8, 3), dpi=100)
         ax: FigureBase = fig.add_subplot(111)
 
         # Plot data
-        ax.plot(self.initial_years, self.average_adjusted, marker='o')
-        ax.plot(self.initial_years[-1:] + self.years, self.average_adjusted[-1:] + y_predict, marker='o')
+        ax.plot(self.initial_years, new_average_adjusted, marker='o')
+        ax.plot(self.initial_years[-1:] + self.years, new_average_adjusted[-1:] + y_predict, marker='o')
 
         # Set graph params
         ax.set_xlabel('Years')
